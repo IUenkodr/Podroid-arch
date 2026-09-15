@@ -15,8 +15,9 @@ FROM ubuntu:22.04 AS builder
 RUN apt-get update && apt-get install -y curl squashfs-tools tar openssl qemu-user-static
 WORKDIR /work
 
-# Use the direct mirror URL and verify download
-RUN curl -L -o bootstrap.tar.gz https://mirrors.edge.kernel.org/archlinux/iso/latest/archlinux-bootstrap-x86_64.tar.gz \
+# Using a fixed stable version instead of /latest/ to avoid mirror redirection/404 errors
+# We use the official archive mirror which is the most stable source.
+RUN curl -L -o bootstrap.tar.gz https://archive.archlinux.org/iso/20240514/archlinux-bootstrap-x86_64.tar.gz \
     && [ -s bootstrap.tar.gz ] \
     && mkdir arch-bootstrap \
     && tar -xzf bootstrap.tar.gz -C arch-bootstrap \
