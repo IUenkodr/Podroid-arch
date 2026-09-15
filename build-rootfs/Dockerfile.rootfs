@@ -1,29 +1,29 @@
-# Stage 1: Cross-compile Podroid tools for x86_64
+# Stage 1: Build Podroid tools for ARM64
+# We use a cross-compiler toolchain to build aarch64 binaries on the x86_64 runner
 FROM ubuntu:22.04 AS vsock-builder
-RUN apt-get update && apt-get install -y build-essential gcc make
+RUN apt-get update && apt-get install -y gcc-aarch64-linux-gnu make
 WORKDIR /work
 COPY build-rootfs/vsock-agent ./vsock-agent
 COPY build-rootfs/host-bridge ./host-bridge
 COPY build-rootfs/overlay-normalize ./overlay-normalize
 
-RUN cd vsock-agent && make CC=gcc
-RUN cd host-bridge && make CC=gcc
-RUN cd overlay-normalize && make CC=gcc
+# Use the aarch64 cross-compiler
+RUN cd vsock-agent && make CC=aarch64-linux-gnu-gcc
+RUN cd host-bridge && make CC=aarch64-linux-gnu-gcc
+RUN cd overlay-normalize && make CC=aarch64-linux-gnu-gcc
 
-# Stage 2: Arch Linux Rootfs Generation
+# Stage 2: Build the Arch Linux ARM rootfs squashfs
 FROM ubuntu:22.04 AS builder
-RUN apt-get update && apt-get install -y squashfs-tools tar openssl qemu-user-static
+RUN apt-get update && apt-get install -y curl squashfs-tools tar openssl
 WORKDIR /work
 
-# We now receive the bootstrap image from the build context (downloaded by GitHub Action)
-COPY arch-bootstrap.tar.gz .
-RUN mkdir arch-bootstrap && tar -xzf arch-bootstrap.tar.gz -C arch-bootstrap && rm arch-bootstrap.tar.gz
+# Download the official Arch Linux ARM Generic AArch64 rootfs
+RUN curl -L -o rootfs.tar.gz http://os.archlinuxarm.org/os/aarch64/rootfs.tar.gz \
+    && mkdir rootfs \
+    && tar -xzf rootfs.tar.gz -C rootfs \
+    && rm rootfs.tar.gz
 
-# Create the actual rootfs using pacstrap
-RUN mkdir rootfs && \
-    arch-bootstrap/bin/pacstrap -K rootfs base base-devel iproute2 systemd util-linux zram-generator
-
-# Inject compiled binaries
+# Inject the aarch64 binaries built in stage 1
 COPY --from=vsock-builder /work/vsock-agent/podroid-vsock-agent /work/rootfs/usr/local/bin/
 COPY --from=vsock-builder /work/host-bridge/podroid-hostd /work/rootfs/usr/local/bin/
 COPY --from=vsock-builder /work/overlay-normalize/podroid-overlay-normalize /work/rootfs/usr/local/bin/
@@ -33,7 +33,7 @@ COPY build-rootfs/scripts/podroid-bootstrap.sh /work/rootfs/etc/podroid-bootstra
 COPY build-rootfs/scripts/podroid-hostd.service /work/rootfs/etc/systemd/system/podroid-hostd.service
 RUN chmod +x /work/rootfs/etc/podroid-bootstrap.sh
 
-# Final packaging
+# Final packaging (ARM64 rootfs)
 RUN mksquashfs /work/rootfs /work/arch-rootfs.squashfs -comp zstd -Xcompression-level 19 -all-root -noappend
 
 FROM scratch AS export
