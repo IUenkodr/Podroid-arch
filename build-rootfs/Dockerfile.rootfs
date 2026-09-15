@@ -1,7 +1,7 @@
 # Stage 1: Build Podroid tools for ARM64
-# We use a cross-compiler toolchain to build aarch64 binaries on the x86_64 runner
 FROM ubuntu:22.04 AS vsock-builder
-RUN apt-get update && apt-get install -y gcc-aarch64-linux-gnu make
+# Added linux-headers-generic to resolve 'struct sockaddr' and 'sa_family_t' errors
+RUN apt-get update && apt-get install -y gcc-aarch64-linux-gnu make linux-headers-generic
 WORKDIR /work
 COPY build-rootfs/vsock-agent ./vsock-agent
 COPY build-rootfs/host-bridge ./host-bridge
@@ -17,8 +17,8 @@ FROM ubuntu:22.04 AS builder
 RUN apt-get update && apt-get install -y curl squashfs-tools tar openssl
 WORKDIR /work
 
-# Download the official Arch Linux ARM Generic AArch64 rootfs
-RUN curl -L -o rootfs.tar.gz http://os.archlinuxarm.org/os/aarch64/rootfs.tar.gz \
+# Fixed: Use HTTPS and added -f to fail fast on HTTP errors
+RUN curl -L -f -o rootfs.tar.gz https://os.archlinuxarm.org/os/aarch64/rootfs.tar.gz \
     && mkdir rootfs \
     && tar -xzf rootfs.tar.gz -C rootfs \
     && rm rootfs.tar.gz
