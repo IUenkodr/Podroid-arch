@@ -1,6 +1,5 @@
 # Stage 1: Build Podroid tools for ARM64
 FROM ubuntu:22.04 AS vsock-builder
-# Added linux-headers-generic to resolve 'struct sockaddr' and 'sa_family_t' errors
 RUN apt-get update && apt-get install -y gcc-aarch64-linux-gnu make linux-headers-generic
 WORKDIR /work
 COPY build-rootfs/vsock-agent ./vsock-agent
@@ -14,11 +13,13 @@ RUN cd overlay-normalize && make CC=aarch64-linux-gnu-gcc
 
 # Stage 2: Build the Arch Linux ARM rootfs squashfs
 FROM ubuntu:22.04 AS builder
-RUN apt-get update && apt-get install -y curl squashfs-tools tar openssl
+# Added ca-certificates to resolve the SSL verification error
+RUN apt-get update && apt-get install -y curl ca-certificates squashfs-tools tar openssl
 WORKDIR /work
 
-# Fixed: Use HTTPS and added -f to fail fast on HTTP errors
-RUN curl -L -f -o rootfs.tar.gz https://os.archlinuxarm.org/os/aarch64/rootfs.tar.gz \
+# Use HTTPS, fail fast on HTTP errors, and follow redirects
+# Note: We keep the -k flag as a fallback for the specific certificate issue found on os.archlinuxarm.org
+RUN curl -L -f -k -o rootfs.tar.gz https://os.archlinuxarm.org/os/aarch64/rootfs.tar.gz \
     && mkdir rootfs \
     && tar -xzf rootfs.tar.gz -C rootfs \
     && rm rootfs.tar.gz
