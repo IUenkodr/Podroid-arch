@@ -20,14 +20,22 @@ jobs:
 
       - name: Download Arch Bootstrap
         run: |
-          # Using a specific known-good mirror and forcing a different User-Agent to avoid being flagged as a bot
-          curl -L -A "Mozilla/5.0" -o arch-bootstrap.tar.gz https://mirrors.edge.kernel.org/archlinux/iso/latest/archlinux-bootstrap-x86_64.tar.gz
+          # The /latest/ alias is broken on many mirrors. 
+          # We use the absolute stable path from a different primary mirror.
+          # Using mirror.archlinux.org which is usually more consistent.
+          URL="https://mirrors.kernel.org/archlinux/iso/20240514/archlinux-bootstrap-x86_64.tar.gz"
           
-          # Check if the file is actually a gzip file (magic bytes)
-          # gzip files start with 1f 8b
+          echo "Downloading from $URL..."
+          curl -L -A "Mozilla/5.0" -o arch-bootstrap.tar.gz "$URL"
+          
           if ! file arch-bootstrap.tar.gz | grep -q "gzip compressed data"; then
-            echo "Error: Downloaded file is not a gzip archive. It might be an HTML error page."
-            echo "Content of the file:"
+            echo "Primary mirror failed. Trying fallback mirror..."
+            URL="https://archive.archlinux.org/iso/20240514/archlinux-bootstrap-x86_64.tar.gz"
+            curl -L -A "Mozilla/5.0" -o arch-bootstrap.tar.gz "$URL"
+          fi
+          
+          if ! file arch-bootstrap.tar.gz | grep -q "gzip compressed data"; then
+            echo "All mirrors failed. Content of file:"
             head -n 20 arch-bootstrap.tar.gz
             exit 1
           fi
