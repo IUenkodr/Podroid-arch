@@ -15,15 +15,11 @@
 #include <unistd.h>
 #include <linux/vm_sockets.h>
 
+#define SOCK_PATH   "/run/podroid-hostd.sock"
 #define HVC_PATH    "/dev/hvc2"
 #define VSOCK_PORT  9101
 #define HOST_TIMEOUT_S 5
 
-/* base64 (standard alphabet, no wrap) */
-static const char B64[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-static char *b64encode(const unsigned char *in, size_t len) {
     size_t olen = 4 * ((len + 2) / 3);
     char *out = malloc(olen + 1);
     if (!out) return NULL;
