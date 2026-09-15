@@ -20,8 +20,18 @@ jobs:
 
       - name: Download Arch Bootstrap
         run: |
-          curl -L -o arch-bootstrap.tar.gz https://mirrors.edge.kernel.org/archlinux/iso/latest/archlinux-bootstrap-x86_64.tar.gz
-          if [ ! -s arch-bootstrap.tar.gz ]; then echo "Download failed"; exit 1; fi
+          # Using a specific known-good mirror and forcing a different User-Agent to avoid being flagged as a bot
+          curl -L -A "Mozilla/5.0" -o arch-bootstrap.tar.gz https://mirrors.edge.kernel.org/archlinux/iso/latest/archlinux-bootstrap-x86_64.tar.gz
+          
+          # Check if the file is actually a gzip file (magic bytes)
+          # gzip files start with 1f 8b
+          if ! file arch-bootstrap.tar.gz | grep -q "gzip compressed data"; then
+            echo "Error: Downloaded file is not a gzip archive. It might be an HTML error page."
+            echo "Content of the file:"
+            head -n 20 arch-bootstrap.tar.gz
+            exit 1
+          fi
+          echo "Download verified: File is a valid gzip archive."
 
       - name: Build Arch Rootfs
         run: |
