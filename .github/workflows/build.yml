@@ -20,26 +20,32 @@ jobs:
 
       - name: Download Arch Bootstrap
         run: |
-          # The /latest/ alias is broken on many mirrors. 
-          # We use the absolute stable path from a different primary mirror.
-          # Using mirror.archlinux.org which is usually more consistent.
-          URL="https://mirrors.kernel.org/archlinux/iso/20240514/archlinux-bootstrap-x86_64.tar.gz"
-          
-          echo "Downloading from $URL..."
-          curl -L -A "Mozilla/5.0" -o arch-bootstrap.tar.gz "$URL"
-          
-          if ! file arch-bootstrap.tar.gz | grep -q "gzip compressed data"; then
-            echo "Primary mirror failed. Trying fallback mirror..."
-            URL="https://archive.archlinux.org/iso/20240514/archlinux-bootstrap-x86_64.tar.gz"
-            curl -L -A "Mozilla/5.0" -o arch-bootstrap.tar.gz "$URL"
-          fi
-          
-          if ! file arch-bootstrap.tar.gz | grep -q "gzip compressed data"; then
-            echo "All mirrors failed. Content of file:"
+          # The bootstrap image is notoriously hard to find via 'latest' on some mirrors.
+          # We will use a rotating list of known high-availability mirrors.
+          MIRRORS=(
+            "https://mirror.rackspace.com/archlinux/iso/latest/archlinux-bootstrap-x86_64.tar.gz"
+            "https://mirror.rackspace.com/archlinux/iso/20240514/archlinux-bootstrap-x86_64.tar.gz"
+            "https://mirrors.kernel.org/archlinux/iso/latest/archlinux-bootstrap-x86_64.tar.gz"
+            "https://archive.archlinux.org/iso/latest/archlinux-bootstrap-x86_64.tar.gz"
+          )
+
+          SUCCESS=false
+          for URL in "\${MIRRORS[@]}"; do
+            echo "Trying mirror: \$URL"
+            curl -L -A "Mozilla/5.0" -o arch-bootstrap.tar.gz "\$URL"
+            if file arch-bootstrap.tar.gz | grep -q "gzip compressed data"; then
+              echo "Successfully downloaded from \$URL"
+              SUCCESS=true
+              break
+            fi
+            echo "Mirror failed or returned non-gzip content."
+          done
+
+          if [ "\$SUCCESS" = false ]; then
+            echo "All mirrors failed. Final attempt at file content:"
             head -n 20 arch-bootstrap.tar.gz
             exit 1
           fi
-          echo "Download verified: File is a valid gzip archive."
 
       - name: Build Arch Rootfs
         run: |
