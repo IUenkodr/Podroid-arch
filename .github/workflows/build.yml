@@ -18,6 +18,11 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
+      - name: Download Arch Bootstrap
+        run: |
+          curl -L -o arch-bootstrap.tar.gz https://mirrors.edge.kernel.org/archlinux/iso/latest/archlinux-bootstrap-x86_64.tar.gz
+          if [ ! -s arch-bootstrap.tar.gz ]; then echo "Download failed"; exit 1; fi
+
       - name: Build Arch Rootfs
         run: |
           docker build -t podroid-arch-rootfs -f build-rootfs/Dockerfile.rootfs .
