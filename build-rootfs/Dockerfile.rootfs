@@ -13,13 +13,11 @@ RUN cd overlay-normalize && make CC=aarch64-linux-gnu-gcc
 
 # Stage 2: Build the Arch Linux ARM rootfs squashfs
 FROM ubuntu:22.04 AS builder
-# Added ca-certificates to resolve the SSL verification error
 RUN apt-get update && apt-get install -y curl ca-certificates squashfs-tools tar openssl
 WORKDIR /work
 
-# Use HTTPS, fail fast on HTTP errors, and follow redirects
-# Note: We keep the -k flag as a fallback for the specific certificate issue found on os.archlinuxarm.org
-RUN curl -L -f -k -o rootfs.tar.gz https://os.archlinuxarm.org/os/aarch64/rootfs.tar.gz \
+# Use the specific Qualcomm-compatible rootfs provided by the user
+RUN curl -L -f -k -o rootfs.tar.gz http://fr.mirror.archlinuxarm.org/os/qualcomm/ArchLinuxARM-2026.06-dragonboard410c-rootfs.tar.gz \
     && mkdir rootfs \
     && tar -xzf rootfs.tar.gz -C rootfs \
     && rm rootfs.tar.gz
