@@ -1,27 +1,7 @@
-/*
- * Podroid - Rootless Podman for Android
- * Copyright (C) 2024-2026 Podroid contributors
- *
- * podroid-hostd - guest side of the Android host bridge.
- *
- * Multi-call binary (argv[0] basename):
- *   podroid-hostd     daemon: relays /run/podroid-host.sock <-> Android.
- *   podroid-notify    CLI: post an Android notification.
- *   podroid-forward   CLI: add/remove/list Android port forwards.
- *   podroid-open      CLI: open a URL on Android (ACTION_VIEW).
- *   podroid-power     CLI: stop/restart the VM, or query status.
- *   podroid-headless  CLI (alias podroid-server): toggle server mode.
- *
- * Daemon transport (one request line -> one response line, serialized):
- *   AVF  (podroid.backend=avf in /proc/cmdline): listen AF_VSOCK :9101, accept
- *        the Android connection.
- *   QEMU (otherwise): open /dev/hvc2.
- */
 #define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
-#include <linux/vm_sockets.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdio.h>
@@ -33,8 +13,8 @@
 #include <sys/un.h>
 #include <termios.h>
 #include <unistd.h>
+#include <linux/vm_sockets.h>
 
-#define SOCK_PATH   "/run/podroid-host.sock"
 #define HVC_PATH    "/dev/hvc2"
 #define VSOCK_PORT  9101
 #define HOST_TIMEOUT_S 5
