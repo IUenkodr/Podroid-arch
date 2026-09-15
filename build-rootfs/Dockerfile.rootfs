@@ -37,3 +37,4 @@ RUN mksquashfs /work/rootfs /work/arch-rootfs.squashfs -comp zstd -Xcompression-
 
 FROM scratch AS export
 COPY --from=builder /work/arch-rootfs.squashfs /arch-rootfs.squashfs
+CMD ["/bin/true"]
