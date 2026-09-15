@@ -20,6 +20,9 @@
 #define VSOCK_PORT  9101
 #define HOST_TIMEOUT_S 5
 
+/* Encodes binary data into a freshly malloc'd NUL-terminated base64 string. NULL on error. */
+static char *b64encode(const unsigned char *in, size_t len) {
+    const char B64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     size_t olen = 4 * ((len + 2) / 3);
     char *out = malloc(olen + 1);
     if (!out) return NULL;
@@ -45,7 +48,6 @@
     return out;
 }
 
-static int b64val(char c) {
     if (c >= 'A' && c <= 'Z') return c - 'A';
     if (c >= 'a' && c <= 'z') return c - 'a' + 26;
     if (c >= '0' && c <= '9') return c - '0' + 52;
