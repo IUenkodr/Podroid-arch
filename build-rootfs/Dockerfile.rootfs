@@ -1,49 +1,40 @@
-# build-rootfs/Dockerfile.rootfs
-
-# ── Stage 1: cross-compile podroid-vsock-agent (musl-static aarch64) ────────
-# Uses qemu-user under the hood — no separate cross-toolchain needed.
-FROM --platform=linux/arm64 alpine:3.24 AS vsock-builder
-RUN apk add --no-cache musl-dev gcc make linux-headers
+# Stage 1: Cross-compile Podroid tools for x86_64
+FROM ubuntu:22.04 AS vsock-builder
+RUN apt-get update && apt-get install -y build-essential gcc make
 WORKDIR /work
-COPY vsock-agent /work/vsock-agent
-RUN cd /work/vsock-agent && make CC=gcc
-COPY host-bridge /work/host-bridge
-RUN cd /work/host-bridge && make CC=gcc
-COPY overlay-normalize /work/overlay-normalize
-RUN cd /work/overlay-normalize && make CC=gcc
+COPY build-rootfs/vsock-agent ./vsock-agent
+COPY build-rootfs/host-bridge ./host-bridge
+COPY build-rootfs/overlay-normalize ./overlay-normalize
 
-# ── Stage 2: build the Alpine rootfs squashfs ───────────────────────────────
-FROM alpine:3.24 AS builder
+RUN cd vsock-agent && make CC=gcc
+RUN cd host-bridge && make CC=gcc
+RUN cd overlay-normalize && make CC=gcc
 
-ARG ALPINE_RELEASE=3.24.1
-ARG ALPINE_ARCH=aarch64
-
-RUN apk add --no-cache curl squashfs-tools tar openssl libcap-utils
-
+# Stage 2: Arch Linux Rootfs Generation
+FROM ubuntu:22.04 AS builder
+RUN apt-get update && apt-get install -y curl squashfs-tools tar openssl qemu-user-static
 WORKDIR /work
-RUN curl -L -o minirootfs.tar.gz \
-    "https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_RELEASE%.*}/releases/${ALPINE_ARCH}/alpine-minirootfs-${ALPINE_RELEASE}-${ALPINE_ARCH}.tar.gz" \
- && mkdir rootfs \
- && tar -xzf minirootfs.tar.gz -C rootfs \
- && rm minirootfs.tar.gz
 
-# Pull in the vsock-agent binary built in stage 1.
-COPY --from=vsock-builder /work/vsock-agent/podroid-vsock-agent /work/rootfs/usr/local/bin/podroid-vsock-agent
-COPY --from=vsock-builder /work/host-bridge/podroid-hostd /work/rootfs/usr/local/bin/podroid-hostd
-COPY --from=vsock-builder /work/overlay-normalize/podroid-overlay-normalize /work/rootfs/usr/local/bin/podroid-overlay-normalize
+# Install Arch Linux bootstrap tools
+RUN curl -L -O https://mirrors.kernel.org/archlinux/iso/latest/archlinux-bootstrap-x86_64.tar.gz \
+    && mkdir arch-bootstrap && tar -xzf archlinux-bootstrap-x86_64.tar.gz -C arch-bootstrap
 
-ARG SYSTEM_VERSION=0
-ENV SYSTEM_VERSION=${SYSTEM_VERSION}
+# Create the actual rootfs using pacstrap
+RUN mkdir rootfs && \
+    arch-bootstrap/bin/pacstrap -K rootfs base base-devel iproute2 systemd util-linux zram-generator
 
-ENV ALPINE_VERSION=${ALPINE_RELEASE}
-COPY files /work/files
-COPY build-rootfs.sh /work/build-rootfs.sh
-RUN chmod +x /work/build-rootfs.sh && /work/build-rootfs.sh
+# Inject compiled binaries
+COPY --from=vsock-builder /work/vsock-agent/podroid-vsock-agent /work/rootfs/usr/local/bin/
+COPY --from=vsock-builder /work/host-bridge/podroid-hostd /work/rootfs/usr/local/bin/
+COPY --from=vsock-builder /work/overlay-normalize/podroid-overlay-normalize /work/rootfs/usr/local/bin/
 
-RUN mksquashfs /work/rootfs /work/alpine-rootfs.squashfs \
-    -comp zstd -Xcompression-level 19 -all-root -noappend
-# (No -no-xattrs: rootless podman's newuidmap/newgidmap need their
-# file capabilities preserved; they're stored as security.capability xattr.)
+# Inject the converted Bootstrap script and Systemd units
+COPY build-rootfs/scripts/podroid-bootstrap.sh /work/rootfs/etc/podroid-bootstrap.sh
+COPY build-rootfs/scripts/podroid-hostd.service /work/rootfs/etc/systemd/system/podroid-hostd.service
+RUN chmod +x /work/rootfs/etc/podroid-bootstrap.sh
+
+# Final packaging
+RUN mksquashfs /work/rootfs /work/arch-rootfs.squashfs -comp zstd -Xcompression-level 19 -all-root -noappend
 
 FROM scratch AS export
-COPY --from=builder /work/alpine-rootfs.squashfs /alpine-rootfs.squashfs
+COPY --from=builder /work/arch-rootfs.squashfs /arch-rootfs.squashfs

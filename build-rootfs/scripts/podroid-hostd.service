@@ -1,0 +1,12 @@
+[Unit]
+Description=Podroid Guest Host Bridge
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/podroid-hostd
+Restart=always
+StandardOutput=append:/var/log/podroid-hostd.log
+StandardError=append:/var/log/podroid-hostd.log
+
+[Install]
+WantedBy=multi-user.target
