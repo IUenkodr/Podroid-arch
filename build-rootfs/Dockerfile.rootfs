@@ -15,9 +15,12 @@ FROM ubuntu:22.04 AS builder
 RUN apt-get update && apt-get install -y curl squashfs-tools tar openssl qemu-user-static
 WORKDIR /work
 
-# Install Arch Linux bootstrap tools
-RUN curl -L -O https://mirrors.kernel.org/archlinux/iso/latest/archlinux-bootstrap-x86_64.tar.gz \
-    && mkdir arch-bootstrap && tar -xzf archlinux-bootstrap-x86_64.tar.gz -C arch-bootstrap
+# Use the direct mirror URL and verify download
+RUN curl -L -o bootstrap.tar.gz https://mirrors.edge.kernel.org/archlinux/iso/latest/archlinux-bootstrap-x86_64.tar.gz \
+    && [ -s bootstrap.tar.gz ] \
+    && mkdir arch-bootstrap \
+    && tar -xzf bootstrap.tar.gz -C arch-bootstrap \
+    && rm bootstrap.tar.gz
 
 # Create the actual rootfs using pacstrap
 RUN mkdir rootfs && \
