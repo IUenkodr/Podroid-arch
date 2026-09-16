@@ -42,7 +42,7 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease
         env:
-          PODROID_RELEASE_STORE_FILE: release.jks
+          PODROID_RELEASE_STORE_FILE: ${{ github.workspace }}/release.jks
           PODROID_RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           PODROID_RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           PODROID_RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
