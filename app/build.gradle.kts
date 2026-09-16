@@ -1,7 +1,7 @@
 /*
  * Podroid — Rootless Podman for Android
  *
- * A headless AArch64 QEMU micro-VM running Alpine Linux with Podman,
+ * A headless AArch64 QEMU micro-VM running Archlinuxarm with Podman,
  * accessed via built-in serial terminal.
  */
 plugins {
@@ -44,7 +44,7 @@ android {
                 storeFile     = file(storePath)
                 storePassword = project.findProperty("PODROID_RELEASE_STORE_PASSWORD") as? String
                 keyAlias      = project.findProperty("PODROID_RELEASE_KEY_ALIAS")      as? String
-                keyPassword   = project.findProperty("PODROID_RELEASE_KEY_PASSWORD")   as? String
+                keyPassword   = project.findProperty("PODROID_RELEASE_KEY_PASSWORD")   as? project.findProperty("RELEASE_STORE_PASSWORD
             }
         }
     }
