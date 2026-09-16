@@ -93,3 +93,4 @@ Full list in [CREDITS.md](CREDITS.md).
 ## License
 
 [GPLv2](LICENSE). If Podroid is useful to you, a [star](https://github.com/ExTV/Podroid/stargazers) helps other people find it.
+""  
