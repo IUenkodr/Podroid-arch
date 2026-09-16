@@ -50,20 +50,4 @@ jobs:
         with:
           name: Podroid-Arch-APKs
           path: app/build/outputs/apk/**/*.apk
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
 
-      # --- UPDATE THIS STEP ---
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
-        env:
-          PODROID_RELEASE_STORE_FILE: ${{ github.workspace }}/release.jks
-          PODROID_RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
-          PODROID_RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-          PODROID_RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-
-      - name: Upload APKs
-        uses: actions/upload-artifact@v4
-        with:
-          name: Podroid-Arch-APKs
-          path: app/build/outputs/apk/**/*.apk
