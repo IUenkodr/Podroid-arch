@@ -2,7 +2,7 @@
 
 <img src="docs/logo.png" alt="Podroid logo" width="120" />
 
-# Podroid
+# Podroid (IUenkodr Fork)`n`n> **This is a personal fork of [ExTV/Podroid](https://github.com/ExTV/Podroid) configured for automated APK builds via GitHub Actions.** (IUenkodr Fork)`n`n> **This is a personal fork of [ExTV/Podroid](https://github.com/ExTV/Podroid) configured for automated APK builds via GitHub Actions.** (IUenkodr Fork)`n`n> **This is a personal fork of [ExTV/Podroid](https://github.com/ExTV/Podroid) configured for automated APK builds via GitHub Actions.** (IUenkodr Fork)`n`n> **Note:** This is a personal fork of [ExTV/Podroid](https://github.com/ExTV/Podroid) configured for automated APK builds via GitHub Actions.
 
 **Run Linux containers and a full Linux desktop on your Android phone. No root.**
 
@@ -59,10 +59,10 @@ ssh root@<phone-ip> -p 9922        # password: podroid
 
 Setup, the two backends, networking, the X11 viewer and troubleshooting all live in the **[documentation](https://extv.github.io/Podroid/guide/)**.
 
-## Build
+## Build`n`n### Automated Builds`nThis fork is configured to build APKs automatically using GitHub Actions. Check the **Actions** tab for the latest successful build artifacts.`n`n### Automated Builds`nThis fork is configured to build APKs automatically using GitHub Actions. Check the **Actions** tab for the latest successful build artifacts.`n`n### Automated Builds`nThis fork is configured to build APKs automatically using GitHub Actions. Check the **Actions** tab for the latest successful build artifacts.`n`n### Official Build`nThe official build instructions are in the original repository.
 
 ```sh
-git clone https://github.com/ExTV/Podroid.git
+git clone https://github.com/IUenkodr/Podroid-arch.git
 cd Podroid
 ./build-all.sh all     # kernel, rootfs, QEMU and APK (needs Docker + Android SDK/NDK)
 ```
@@ -94,3 +94,7 @@ Full list in [CREDITS.md](CREDITS.md).
 
 [GPLv2](LICENSE). If Podroid is useful to you, a [star](https://github.com/ExTV/Podroid/stargazers) helps other people find it.
 ""  
+
+
+
+
